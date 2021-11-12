@@ -84,8 +84,9 @@ func Rows(dest interface{}, rows *sql.Rows) error {
 
 	elem := bType.Elem()
 	baseElem := baseType(elem)
-	if baseElem.Kind() != reflect.Struct {
-		return errors.New("slice element must be a struct")
+	isScannable := isScannable(baseElem)
+	if baseElem.Kind() != reflect.Struct && !isScannable {
+		return errors.New("slice element must be a struct or a scannable type")
 	}
 
 	columns, err := rows.Columns()
@@ -98,7 +99,7 @@ func Rows(dest interface{}, rows *sql.Rows) error {
 
 	isPtr := elem.Kind() == reflect.Ptr
 
-	if isScannable(baseElem) {
+	if isScannable {
 		if len(columns) > 1 {
 			return errors.New("scannable dest slice elements with more than 1 column")
 		}

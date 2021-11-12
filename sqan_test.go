@@ -70,19 +70,38 @@ CREATE TABLE tests
 }
 
 func TestRows(t *testing.T) {
-	rows, err := db.Query("SELECT letter, weight, lower_case, exported FROM tests")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("Struct slice", func(t *testing.T) {
+		rows, err := db.Query("SELECT letter, weight, lower_case, exported FROM tests")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	var got []Test
-	if err := Rows(&got, rows); err != nil {
-		t.Fatal(err)
-	}
+		var got []Test
+		if err := Rows(&got, rows); err != nil {
+			t.Fatal(err)
+		}
 
-	if !reflect.DeepEqual(records, got) {
-		t.Errorf("Expected %v, got %v", records, got)
-	}
+		if !reflect.DeepEqual(records, got) {
+			t.Errorf("Expected %v, got %v", records, got)
+		}
+	})
+
+	t.Run("String slice", func(t *testing.T) {
+		expected := []string{"A", "b", "C"}
+		rows, err := db.Query("SELECT letter FROM tests")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var got []string
+		if err := Rows(&got, rows); err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("Expected %v, got %v", records, got)
+		}
+	})
 }
 
 func TestRowsErrors(t *testing.T) {
