@@ -38,13 +38,13 @@ func main() {
 	// 1 "Alice" 4 time.Time
 	// 2 "Bob"   3 time.Time
 
-	rows, _ := db.Query("SELECT friends_count, created_at FROM users WHERE id=$1", 1)
+	rows, _ = db.Query("SELECT name, friends_count FROM users WHERE id=$1", 1)
 
 	var user User
 	_ = sqan.Row(&user, rows)
 	fmt.Println(user.ID, user.Name, user.Stats.FriendsCount, user.CreatedAt)
 	// In some cases, it may be useful to use pointer fields so the empty ones are null
-	// 0 "" 4 time.Time
+	// 0 "Alice" 4 time.Time{}
 }
 ```
 
