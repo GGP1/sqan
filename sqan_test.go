@@ -13,16 +13,16 @@ import (
 // Test struct.
 type Test struct {
 	Letter    string
-	Lowercase bool `db:"lower_case"`
-	Weight    int
 	Skip      []Sub
 	Sub       Sub
+	Weight    int
+	Lowercase bool `db:"lower_case"`
 }
 
 // Sub struct.
 type Sub struct {
-	Exported   bool
 	unexported string
+	Exported   bool
 }
 
 var db *sql.DB
@@ -111,8 +111,8 @@ func TestRowsErrors(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc string
 		dest interface{}
+		desc string
 	}{
 		{
 			desc: "Not a pointer",
@@ -166,8 +166,8 @@ func TestRowErrors(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc string
 		dest interface{}
+		desc string
 	}{
 		{
 			desc: "Not a pointer",
