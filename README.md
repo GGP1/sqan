@@ -7,93 +7,44 @@ Unlike other libraries, sqan maps structs recursively, this simplifies the scann
 ## Install
 
 ```
-go get github.com/GGP1/sqan
+go get -u github.com/GGP1/sqan
 ```
 
 ## Usage
 
 ```go
-package main
-
-import (
-	"database/sql"
-	"log"
-
-	"github.com/GGP1/sqan"
-
-	_ "github.com/lib/pq"
-)
-
 type User struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 	Name string `json:"name"`
 	Stats Stats `json:"stats"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
 type Stats struct {
-	FriendsCount int `json:"friends_count" db:"friends_count"` // Other libraries wouldn't map this field
+	// Other libraries wouldn't map this field
+	FriendsCount int `json:"friends_count" db:"friends_count"`
 }
 
+// Error handling omitted for simplicity sake
 func main() {
-	db, err := sql.Open("postgres", "user=postgres dbname=postgres sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
+	rows, _ := db.Query("SELECT * FROM users")
 
-	db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		id serial PRIMARY KEY,
-		name varchar(64),
-		friends_count integer,
-		created_at timestamp with time zone DEFAULT NOW()
-	)`)
-	db.Exec("INSERT INTO users (name, friends_count) VALUES ($1, $2), ($3, $4)", "Alice", 4, "Bob", 3)
-
-	users, err := getUsers(db)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var users []User
+	_ = sqan.Rows(&users, rows)
 
 	for _, user := range users {
 		fmt.Println(user.ID, user.Name, user.Stats.FriendsCount, user.CreatedAt)
 	}
-	// 1 Alice 4 time
-	// 2 Bob 3 time
+	// 1 "Alice" 4 time.Time
+	// 2 "Bob"   3 time.Time
 
-	user, err := getUser(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(user.ID, user.Name, user.Stats.FriendsCount, user.CreatedAt)
-	// 0 "" 4 time
-}
-
-func getUsers(db *sql.DB) ([]Users, error) {
-	rows, err := db.Query("SELECT * FROM users")
-	if err != nil {
-		return nil, err
-	}
-
-	var users []User
-	if err := sqan.Rows(&users, rows); err != nil {
-		return nil, err
-	}
-
-	return users, nil
-}
-
-func getUser(db *sql.DB) (User, error) {
-	rows, err := db.Query("SELECT friends_count, created_at FROM users WHERE id=$1", "1")
-	if err != nil {
-		return User{}, err
-	}
+	rows, _ := db.Query("SELECT friends_count, created_at FROM users WHERE id=$1", 1)
 
 	var user User
-	if err := sqan.Row(&user, rows); err != nil {
-		return User{}, err
-	}
-
-	return user, nil
+	_ = sqan.Row(&user, rows)
+	fmt.Println(user.ID, user.Name, user.Stats.FriendsCount, user.CreatedAt)
+	// In some cases, it may be useful to use pointer fields so the empty ones are null
+	// 0 "" 4 time.Time
 }
 ```
 
